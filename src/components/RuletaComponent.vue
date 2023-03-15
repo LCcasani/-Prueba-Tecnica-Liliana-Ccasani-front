@@ -1,5 +1,5 @@
 <template>
-      <div class="row">
+      <div class="row" v-show="(usuario.existeUsuario)">
         <div class="col-12">
           <div class="p-4">
               <h2>{{message}}</h2>
@@ -68,7 +68,7 @@
       </div>
 </template>
 <script>
-// import { computed } from 'vue'
+import { mapState } from "vuex";
 export default {
   data() {
     return {
@@ -79,8 +79,7 @@ export default {
       spinTime: 0,
       spinTimeTotal: 0,
       spinAngleStart: 0,
-      message:'',
-      lastResult : {}
+      message:''
     }  
   },
   computed :{
@@ -88,7 +87,21 @@ export default {
     arc: function () {
       const self = this;
         return Math.PI / (self.options.length / 2);
-        } 
+        },
+        ...mapState(['usuario']) 
+  },
+  watch: {
+    // whenever question changes, this function will run
+    'apuesta.tipoNumero'(newValue) {
+      if(newValue != 2){
+        this.apuesta.numero = ""
+      }
+    },
+        'apuesta.numero'(newValue) {
+      if(newValue != ""){
+        this.apuesta.tipoNumero = 2
+      }
+    }
   },
    async mounted(){
     const self = this;
@@ -98,7 +111,7 @@ export default {
   methods:{
     obtenerNumeros: async function(){
       const self = this;
-      const api = "https://localhost:44395/api/Ruleta/GetNumerosAzar";
+      const api = "http://localhost:8095/api/Ruleta/GetNumerosAzar";
       const response = await fetch(api);
       const numeros = await response.json();
       self.options = numeros;
@@ -241,11 +254,11 @@ export default {
         color :(self.options[index].color == 'red' ? 0 : 1),
         numero: parseInt(self.options[index].numero)
       }
-     self.obtenerPremio(resultado)?.then(resultado => {
-      self.lastResult = resultado;
-
+     self.obtenerPremio(resultado)?.then(premio => {
+      self.$store.commit('updateUsuarioMonto',premio);
+      self.$store.commit('saveJuego',false);
       self.message = `Resultado: ${(self.options[index].numero  % 2 == 0 ? 'Par':'Impar')} | ${self.options[index].color} | ${self.options[index].numero}
-               ======>  Jugador ${resultado.ganaPremio ? "Gana" : "Pierde"} ${resultado.montoPremio}`
+               ======>  Jugador ${premio.ganaPremio ? "Gana" : "Pierde"} ${premio.montoPremio}`
      });
 
 
@@ -253,7 +266,7 @@ export default {
       guardarApuesta:async function(){
       const self = this;
 
-      const api = "https://localhost:44395/api/Ruleta/GuardarUsuarioApuesta";
+      const api = "http://localhost:8095/api/Ruleta/GuardarUsuarioApuesta";
 
       const apuesta = self.apuesta;
 
@@ -280,7 +293,7 @@ export default {
     },
     obtenerPremio:async function(resultado){
 
-      const api = "https://localhost:44395/api/Ruleta/GetPremio";
+      const api = "http://localhost:8095/api/Ruleta/GetPremio";
       const config = {
                     method: 'POST',
                     headers: {

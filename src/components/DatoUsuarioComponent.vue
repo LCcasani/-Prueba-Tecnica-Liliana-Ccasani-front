@@ -25,22 +25,18 @@
 </template>
 <script>
 
+import { mapState } from "vuex";
+
 export default {
   data() {
     return {
         usuario:{nombre:"",monto:0.0,existeUsuario:false}
     }
     },
-    // beforeMount(){
-    //     const self = this;
-    //         self.$root.$on('resultado',resultado => {
-    //             self.usuario.monto += resultado.montoPremio;
-    //         });
-    // },
-methods: {
-  resultadoEvent:function(resultado){
-    console.log(resultado);
+      computed :{
+        ...mapState(['premio','juegoGuardado']) 
   },
+methods: {
     guardarUsuario:async function(){
       const self = this;
 
@@ -49,7 +45,7 @@ methods: {
             return false;
         }
         const usuarioData = self.usuario ;
-      const api = "https://localhost:44395/api/Ruleta/CreateUpdate";
+      const api = "http://localhost:8095/api/Ruleta/CreateUpdate";
       const config = {
                     method: 'POST',
                     headers: {
@@ -64,6 +60,9 @@ methods: {
        const result = await response.json();
        self.usuario.existeUsuario = true;
        self.usuario.monto = result.monto;
+
+       self.$store.commit('updateUsuario',self.usuario);
+       self.$store.commit('saveJuego',true);
       }else{
         alert("ha ocurrido un error al guardar usuario");
 
@@ -73,11 +72,21 @@ methods: {
     buscarUsuario:async function(){
         const self = this;
 
+
+
         if(!(self.usuario.nombre)){
             alert("Debe escribir un nombre para relizar la busqueda");
             return false;
         }
-      const api = "https://localhost:44395/api/Ruleta/GetUsuarioData?nombre="+self.usuario.nombre;
+
+
+if(!self.juegoGuardado){
+  const isConfirm =confirm("existen resultados que no fueron guardados. ¿Desea continuar?");
+
+  if(!isConfirm) return false;
+}
+
+      const api = "http://localhost:8095/api/Ruleta/GetUsuarioData?nombre="+self.usuario.nombre;
       const response = await fetch(api);
       if(response.status == 404){
         alert("No se encontró usuario");
@@ -87,6 +96,8 @@ methods: {
       self.usuario.nombre = usuario.nombre;
       self.usuario.monto = usuario.monto;
       self.usuario.existeUsuario = true;
+
+      self.$store.commit('updateUsuario',self.usuario);
     }
 },
 }

@@ -1,7 +1,7 @@
 <template>
     <div class="card-body">
             <h1>Juego de la ruleta</h1>
-            <dato-usuario v-on:resultado.once="resultadoEvent"></dato-usuario>
+            <dato-usuario></dato-usuario>
             <hr>
             <ruleta></ruleta>
 
