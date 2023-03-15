@@ -30,7 +30,8 @@ import { mapState } from "vuex";
 export default {
   data() {
     return {
-        usuario:{nombre:"",monto:0.0,existeUsuario:false}
+        usuario:{nombre:"",monto:0.0,existeUsuario:false},
+        lastUserName:""
     }
     },
       computed :{
@@ -39,6 +40,12 @@ export default {
 methods: {
     guardarUsuario:async function(){
       const self = this;
+// debugger;
+      if(!self.juegoGuardado && self.lastUserName != self.$store.state.usuario.nombre){
+        const isConfirm =confirm("esta cambiando de usuario, se prederan los datos no guardados. ¿Desea continuar?");
+
+        if(!isConfirm) return false;
+      }
 
         if(!(self.usuario.nombre) || !(self.usuario.monto) ){
             alert("debe colocar un nombre y un monto");
@@ -60,9 +67,10 @@ methods: {
        const result = await response.json();
        self.usuario.existeUsuario = true;
        self.usuario.monto = result.monto;
-
+      self.lastUserName = self.usuario.nombre;
        self.$store.commit('updateUsuario',self.usuario);
        self.$store.commit('saveJuego',true);
+       alert("Se guardó correctamente los datos.")
       }else{
         alert("ha ocurrido un error al guardar usuario");
 
@@ -80,11 +88,11 @@ methods: {
         }
 
 
-if(!self.juegoGuardado){
-  const isConfirm =confirm("existen resultados que no fueron guardados. ¿Desea continuar?");
+    if(!self.juegoGuardado){
+      const isConfirm =confirm("existen resultados que no fueron guardados. ¿Desea continuar?");
 
-  if(!isConfirm) return false;
-}
+      if(!isConfirm) return false;
+    }
 
       const api = "http://localhost:8095/api/Ruleta/GetUsuarioData?nombre="+self.usuario.nombre;
       const response = await fetch(api);
@@ -96,8 +104,11 @@ if(!self.juegoGuardado){
       self.usuario.nombre = usuario.nombre;
       self.usuario.monto = usuario.monto;
       self.usuario.existeUsuario = true;
+      self.lastUserName = usuario.nombre;
 
       self.$store.commit('updateUsuario',self.usuario);
+
+      alert("Se cargaron datos del usuario");
     }
 },
 }

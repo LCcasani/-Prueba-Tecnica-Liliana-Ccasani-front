@@ -213,8 +213,13 @@ export default {
     girarRuleta: async function () {
 
         const self = this;
-        const isValid = await self.guardarApuesta();
 
+      if(self.usuario.monto < self.apuesta.montoApuesta){
+        alert("El monto de la apuesta es mayor al saldo!\n Modificar el monto de la apuesta.");
+        return false;
+      }
+
+        const isValid = await self.guardarApuesta();
         if(!isValid) return false;
 
 
